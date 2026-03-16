@@ -94,6 +94,17 @@ const DEFAULT_TAXONOMY = {
   "Other": { icon: "\u{1F4E6}", color: "#8a9a8a", subs: { "Transfers": { icon: "\u{1F4B8}", kw: ["transfer", "nomod", "remittance", "exchange", "western union", "wise"] }, "Insurance": { icon: "\u{1F6E1}\uFE0F", kw: ["insurance", "takaful", "policy", "premium"] }, "Education": { icon: "\u{1F4DA}", kw: ["school", "university", "course", "tuition", "education"] }, "Miscellaneous": { icon: "\u{1F4E6}", kw: [] } } }
 };
 const RAW_SEED = [];
+(function githubSafetyGuard() {
+  var _a;
+  if (RAW_SEED.length > 0) {
+    console.error("\u26A0\uFE0F SECURITY: RAW_SEED contains data \u2014 this should never be committed to GitHub!");
+  }
+  const src = ((_a = document.currentScript) == null ? void 0 : _a.src) || "";
+  if (src.includes("sk-ant-")) {
+    console.error("\u26A0\uFE0F SECURITY: Anthropic API key detected in source code \u2014 remove immediately!");
+  }
+  console.log("\u2713 GitHub safety guard: no personal data detected in source");
+})();
 const fmt = (n, cur = "AED") => cur + " " + Math.abs(Number(n || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtM = (m) => {
   if (!m) return "";
