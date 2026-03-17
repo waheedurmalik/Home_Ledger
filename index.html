@@ -105,7 +105,16 @@ const RAW_SEED = [];
   }
   console.log("\u2713 GitHub safety guard: no personal data detected in source");
 })();
-const fmt = (n, cur = "AED") => cur + " " + Math.abs(Number(n || 0)).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n, cur = "AED", rates = null) => {
+  let val = Math.abs(Number(n || 0));
+  let dispCur = cur;
+  if (rates && cur === "AED" && Object.keys(rates).length) {
+    const [toCur, toRate] = Object.entries(rates)[0];
+    val = val * toRate;
+    dispCur = toCur;
+  }
+  return dispCur + " " + val.toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
 const fmtM = (m) => {
   if (!m) return "";
   const [y, mo] = m.split("-");
@@ -115,7 +124,7 @@ const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric"
 const fmtDNum = (d) => {
   if (!d) return "";
   const [y, m, dd] = d.split("-");
-  return (dd || "").padStart(2, "0") + (m || "").padStart(2, "0") + y;
+  return (dd || "").padStart(2, "0") + "-" + (m || "").padStart(2, "0") + "-" + y;
 };
 const weekKey = (d) => {
   if (!d) return "";
@@ -1359,7 +1368,7 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
     return /* @__PURE__ */ React.createElement("div", { style: { background: C.s2, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, minWidth: 160 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, color: col, marginBottom: 6 } }, label), payload.map((p, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 2, color: C.muted } }, /* @__PURE__ */ React.createElement("span", { style: { color: p.fill } }, p.name), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "monospace", color: C.text } }, fmt(p.value, currency)))), payload.length === 2 && payload[1].value > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 6, paddingTop: 6, borderTop: `1px solid ${C.border}`, fontSize: 11, color: C.dim } }, payload[0].value > payload[1].value ? /* @__PURE__ */ React.createElement("span", { style: { color: C.danger } }, "\u25B2 ", ((payload[0].value / payload[1].value - 1) * 100).toFixed(0), "% vs ", labelB) : /* @__PURE__ */ React.createElement("span", { style: { color: "#0e9e7a" } }, "\u25BC ", ((1 - payload[0].value / payload[1].value) * 100).toFixed(0), "% vs ", labelB)));
   }
   const barHeight = showB ? 52 : 34;
-  return /* @__PURE__ */ React.createElement("div", { style: card }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", justifyContent: "space-between", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "inherit", fontSize: 17 } }, "Spending by ", mode === "categories" ? "Category" : "Subcategory", avgMode ? " \u2014 Avg/Month" : ""), /* @__PURE__ */ React.createElement(Pill, { options: [["categories", "Categories"], ["subcategories", "Subcategories"]], value: mode, onChange: setMode })), showB && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement(PeriodPicker, { label: "Period B", preset: presetB, setPreset: setPresetB, customFrom: cfB, setCustomFrom: setCfB, customTo: ctB, setCustomTo: setCtB, color: "#5a6fd6" })), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowB((v) => !v), style: __spreadProps(__spreadValues({}, btn(showB ? "rgba(167,139,250,0.15)" : C.s2, showB ? "#a78bfa" : C.muted, `1px solid ${showB ? "#a78bfa44" : C.border}`, 11, "5px 12px")), { marginBottom: 14 }) }, showB ? "\u2715 Remove Period B" : "+ Compare Period B"), showB && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: C.accent } }, /* @__PURE__ */ React.createElement("div", { style: { width: 14, height: 14, borderRadius: 3, background: C.accent } }), labelA), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#5a6fd6" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 14, height: 14, borderRadius: 3, background: "#5a6fd6bb" } }), labelB)), chartData.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { padding: 40, textAlign: "center", color: C.dim, fontSize: 13 } }, "No data for this period") : /* @__PURE__ */ React.createElement(HBarChart, { data: chartData, showB, labelA, labelB, colorOf, colA: C.accent, colB: "#5a6fd6", currency, onClickA: (e) => handleClick(e, "A"), onClickB: (e) => handleClick(e, "B") }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.dim, marginTop: 8, textAlign: "center" } }, "Tap a bar to see monthly breakdown"), monthDrill && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: { background: C.surface, borderRadius: "20px 20px 0 0", padding: "20px 16px 32px", width: "100%", maxHeight: "80vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 700, color: C.text } }, monthDrill.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 2 } }, "Monthly spend")), /* @__PURE__ */ React.createElement("button", { onClick: () => setMonthDrill(null), style: { background: C.s2, border: "none", borderRadius: 20, width: 32, height: 32, fontSize: 18, cursor: "pointer", color: C.muted } }, "\xD7")), /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { style: card }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", justifyContent: "space-between", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "inherit", fontSize: 17 } }, "Spending by ", mode === "categories" ? "Category" : "Subcategory", avgMode ? " \u2014 Avg/Month" : ""), /* @__PURE__ */ React.createElement(Pill, { options: [["categories", "Categories"], ["subcategories", "Subcategories"]], value: mode, onChange: setMode })), showB && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12, padding: "10px 14px", background: "rgba(90,111,214,0.06)", border: "1px solid rgba(90,111,214,0.2)", borderRadius: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: "#5a6fd6", marginBottom: 8, letterSpacing: "0.06em" } }, "PERIOD B"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: presetB === "custom" ? 8 : 4 } }, [["all", "All"], ["this_year", "This Year"], ["last_year", "Last Year"], ["this_month", "This Month"], ["last_month", "Last Month"], ["custom", "Custom"]].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setPresetB(v), style: { padding: "5px 11px", borderRadius: 20, border: `1px solid ${presetB === v ? "#5a6fd6" : C.border}`, background: presetB === v ? "#5a6fd6" : "transparent", color: presetB === v ? "#fff" : C.muted, fontSize: 12, cursor: "pointer", fontWeight: presetB === v ? 700 : 500, fontFamily: "inherit" } }, l))), presetB === "custom" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.dim } }, "From"), /* @__PURE__ */ React.createElement("input", { type: "date", value: cfB, onChange: (e) => setCfB(e.target.value), style: __spreadProps(__spreadValues({}, inp()), { colorScheme: "light", fontSize: 11, cursor: "pointer", width: "auto" }) }), /* @__PURE__ */ React.createElement("span", { style: { color: C.dim } }, "\u2192"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.dim } }, "To"), /* @__PURE__ */ React.createElement("input", { type: "date", value: ctB, onChange: (e) => setCtB(e.target.value), style: __spreadProps(__spreadValues({}, inp()), { colorScheme: "light", fontSize: 11, cursor: "pointer", width: "auto" }) })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#5a6fd6", fontFamily: "monospace" } }, fromB, " \u2192 ", toB)), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowB((v) => !v), style: __spreadProps(__spreadValues({}, btn(showB ? "rgba(167,139,250,0.15)" : C.s2, showB ? "#a78bfa" : C.muted, `1px solid ${showB ? "#a78bfa44" : C.border}`, 11, "5px 12px")), { marginBottom: 14 }) }, showB ? "\u2715 Remove Period B" : "+ Compare Period B"), showB && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: C.accent } }, /* @__PURE__ */ React.createElement("div", { style: { width: 14, height: 14, borderRadius: 3, background: C.accent } }), labelA), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#5a6fd6" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 14, height: 14, borderRadius: 3, background: "#5a6fd6bb" } }), labelB)), chartData.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { padding: 40, textAlign: "center", color: C.dim, fontSize: 13 } }, "No data for this period") : /* @__PURE__ */ React.createElement(HBarChart, { data: chartData, showB, labelA, labelB, colorOf, colA: C.accent, colB: "#5a6fd6", currency, onClickA: (e) => handleClick(e, "A"), onClickB: (e) => handleClick(e, "B") }), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.dim, marginTop: 8, textAlign: "center" } }, "Tap a bar to see monthly breakdown"), monthDrill && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: { background: C.surface, borderRadius: "20px 20px 0 0", padding: "20px 16px 32px", width: "100%", maxHeight: "80vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 700, color: C.text } }, monthDrill.label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 2 } }, "Monthly spend")), /* @__PURE__ */ React.createElement("button", { onClick: () => setMonthDrill(null), style: { background: C.s2, border: "none", borderRadius: 20, width: 32, height: 32, fontSize: 18, cursor: "pointer", color: C.muted } }, "\xD7")), /* @__PURE__ */ React.createElement(
     HBarChart,
     {
       data: monthDrill.data.map((r) => __spreadProps(__spreadValues({}, r), { key: fmtM(r.key) })),
@@ -1367,8 +1376,8 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
       labelA: "Spend",
       labelB: "",
       currency,
-      colorOf: () => monthDrill.color,
-      colA: monthDrill.color,
+      colorOf: () => C.accent,
+      colA: C.accent,
       colB: "#5a6fd6",
       onClickA: (r) => {
         var _a;
@@ -1380,14 +1389,16 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
           return ((_a2 = t.date) == null ? void 0 : _a2.slice(0, 7)) === mKey;
         });
         if (txs.length) {
-          setMonthDrill(null);
-          onDrillTxs(txs, monthDrill.label + " \xB7 " + fmtM(mKey));
+          setMonthDrill((prev) => __spreadProps(__spreadValues({}, prev), { txDrill: { txs, label: monthDrill.label + " \xB7 " + fmtM(mKey) } }));
         }
       },
       onClickB: () => {
       }
     }
-  ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.dim, marginTop: 8, textAlign: "center" } }, "Tap a bar to see that month's transactions"))));
+  ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.dim, marginTop: 8, textAlign: "center" } }, "Tap a bar to see that month's transactions"), monthDrill.txDrill && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, borderTop: `1px solid ${C.border}`, paddingTop: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setMonthDrill((prev) => __spreadProps(__spreadValues({}, prev), { txDrill: null })), style: __spreadProps(__spreadValues({}, btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "6px 12px")), { display: "flex", alignItems: "center", gap: 4 }) }, "\u2039 Back"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 600, color: C.text } }, monthDrill.txDrill.label)), /* @__PURE__ */ React.createElement("div", { style: { background: C.bg, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" } }, monthDrill.txDrill.txs.map((tx, i) => {
+    const isCredit = tx.isCredit === true;
+    return /* @__PURE__ */ React.createElement("div", { key: i, style: { padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${C.s2}` } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, tx.description), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: C.muted, marginTop: 2 } }, fmtDNum(tx.date), " \xB7 ", tx.subcategory)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: isCredit ? C.accent : C.danger, flexShrink: 0 } }, isCredit ? "+" : "-", fmt(tx.amount, currency)));
+  }))))));
 }
 function TrendChart({ transactions, taxonomy, currency, pFrom, pTo }) {
   const [mode, setMode] = useState("categories");
@@ -1688,6 +1699,8 @@ function App() {
   const [txSubFilter, setTxSubFilter] = useState("all");
   const [globalTypeFilter, setGlobalTypeFilter] = useState(["standard", "nonstandard", "exceptional"]);
   const [currency, setCurrency] = useState("AED");
+  const [displayCurrency, setDisplayCurrency] = useState("AED");
+  const [displayRates, setDisplayRates] = useState(null);
   const [modal, setModal] = useState(null);
   const [remapTx, setRemapTx] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -1724,7 +1737,19 @@ function App() {
   useEffect(() => {
     if (loaded) storeSave("ledger-currency", currency);
   }, [currency, loaded]);
+  useEffect(() => {
+    if (displayCurrency === "AED") {
+      setDisplayRates(null);
+      return;
+    }
+    getAEDRates().then((r) => {
+      if (r) setDisplayRates(r);
+    });
+  }, [displayCurrency]);
   const transactions = useMemo(() => rawTxs.map((tx) => enrich(tx, taxonomy, vendorMap)), [rawTxs, taxonomy, vendorMap]);
+  const dispRates = displayCurrency !== "AED" && displayRates ? { [displayCurrency]: displayRates[displayCurrency] } : null;
+  const fmtDisp = (n) => fmt(n, currency, dispRates);
+  const dispCur = displayCurrency;
   const months = [...new Set(transactions.map((t) => t.month))].sort();
   const { from: pFrom, to: pTo } = useMemo(() => resolvePeriod(period.preset, period.from, period.to), [period]);
   const mMonths = useMemo(() => {
@@ -1921,8 +1946,8 @@ function App() {
     else sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     return sorted;
   }, [mTxs, txFilter, txSort, txSearch, txCatFilter, txSubFilter, dupesMode, selTxs]);
-  const TABS = [["overview", "\u{1F4CA}"], ["categories", "\u{1F3F7}\uFE0F"], ["subcategories", "\u{1F516}"], ["trend", "\u{1F4C8}"], ["transactions", "\u{1F4CB}"], ["vendors", "\u{1F3EA}"]];
-  const TAB_LABELS = { overview: "Overview", categories: "Categories", subcategories: "Subcategories", trend: "Trends", transactions: "Transactions", vendors: "Vendors" };
+  const TABS = [["overview", "\u{1F4CA}"], ["categories", "\u{1F3F7}\uFE0F"], ["subcategories", "\u{1F516}"], ["transactions", "\u{1F4CB}"], ["vendors", "\u{1F3EA}"]];
+  const TAB_LABELS = { overview: "Overview", categories: "Categories", subcategories: "Subcategories", transactions: "Transactions", vendors: "Vendors" };
   if (!loaded) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontSize: 14 } }, "Loading\u2026");
   return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "inherit", paddingBottom: 90 } }, /* @__PURE__ */ React.createElement("style", null, `*{box-sizing:border-box;margin:0;padding:0;}select,input,textarea,button{font-family:inherit;} body{background:#f4f6f9;}`), modal === "import" && /* @__PURE__ */ React.createElement(ImportModal, { onImport: handleImport, onClose: () => setModal(null) }), modal === "manage" && /* @__PURE__ */ React.createElement(ManageModal, { taxonomy, setTaxonomy, vendorMap, setVendorMap, rawTxs, setRawTxs, onClose: () => setModal(null) }), modal === "remap" && remapTx && /* @__PURE__ */ React.createElement(RemapModal, { tx: remapTx, taxonomy, onSave: handleRemap, onClose: () => {
     setModal(null);
@@ -1931,7 +1956,7 @@ function App() {
     setRemapTx(tx);
     setDrillOverlay(null);
     setModal("remap");
-  }, onClose: () => setDrillOverlay(null) }), /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, background: "rgba(238,240,244,0.97)", backdropFilter: "blur(12px)", boxShadow: "0 1px 8px rgba(0,0,0,0.10)", zIndex: 100 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center" } }, /* @__PURE__ */ React.createElement("img", { src: "logo.png", alt: "Home Ledger", style: { height: 64, width: "auto", objectFit: "contain", filter: "saturate(1.4) brightness(0.92) contrast(1.05)" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("select", { value: currency, onChange: (e) => setCurrency(e.target.value), style: { background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", outline: "none" } }, ["AED", "GBP", "USD", "EUR", "SAR", "INR"].map((c) => /* @__PURE__ */ React.createElement("option", { key: c }, c))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("settings"), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "8px 10px") }, "\u{1F4BE} Save / Load"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("export"), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "8px 10px") }, "\u2B07 Excel"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("manage"), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "8px 10px") }, "\u2699 Config Data"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("import"), style: btn(C.accent, "#fff", "none", 12, "8px 12px") }, "+ Add Data"))), /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 1100, margin: "0 auto", padding: "20px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: period.preset === "custom" ? 10 : 6 } }, [["all", "All"], ["this_year", "This Year"], ["last_year", "Last Year"], ["this_month", "This Month"], ["last_month", "Last Month"], ["custom", "Custom"]].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => {
+  }, onClose: () => setDrillOverlay(null) }), /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, background: "rgba(238,240,244,0.97)", backdropFilter: "blur(12px)", boxShadow: "0 1px 8px rgba(0,0,0,0.10)", zIndex: 100 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center" } }, /* @__PURE__ */ React.createElement("img", { src: "logo.png", alt: "Home Ledger", style: { height: 64, width: "auto", objectFit: "contain", filter: "saturate(1.4) brightness(0.92) contrast(1.05)" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("select", { value: displayCurrency, onChange: (e) => setDisplayCurrency(e.target.value), style: { background: C.s2, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", outline: "none" } }, ["AED", "GBP", "USD", "EUR", "SAR", "INR"].map((c) => /* @__PURE__ */ React.createElement("option", { key: c }, c))), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("settings"), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "8px 10px") }, "\u{1F4BE} Save / Load"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("export"), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "8px 10px") }, "\u2B07 Excel"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("manage"), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 12, "8px 10px") }, "\u2699 Config Data"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("import"), style: btn(C.accent, "#fff", "none", 12, "8px 12px") }, "+ Add Data"))), /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 1100, margin: "0 auto", padding: "20px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: period.preset === "custom" ? 10 : 6 } }, [["all", "All"], ["this_year", "This Year"], ["last_year", "Last Year"], ["this_month", "This Month"], ["last_month", "Last Month"], ["custom", "Custom"]].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => {
     setPeriod((p) => __spreadProps(__spreadValues({}, p), { preset: v }));
     setSelMonths([]);
   }, style: { padding: "6px 13px", borderRadius: 20, border: `1px solid ${period.preset === v && selMonths.length === 0 ? C.accent : C.border}`, background: period.preset === v && selMonths.length === 0 ? C.accent : "transparent", color: period.preset === v && selMonths.length === 0 ? "#fff" : C.muted, fontSize: 12, cursor: "pointer", fontWeight: period.preset === v && selMonths.length === 0 ? 700 : 500, outline: "none" } }, l)), (() => {
@@ -1975,10 +2000,11 @@ function App() {
     {
       transactions,
       taxonomy,
-      currency,
+      currency: displayCurrency,
       pFrom,
       pTo,
       globalTypeFilter,
+      displayRates: dispRates,
       avgMode,
       mMonths,
       onDrillTxs: (txs, label) => setDrillOverlay({ txs, label })
@@ -1987,7 +2013,7 @@ function App() {
     Drill,
     {
       txs: mTxs,
-      cur: currency,
+      cur: displayCurrency,
       taxonomy,
       onRemap: (tx) => {
         setRemapTx(tx);
@@ -2007,7 +2033,7 @@ function App() {
     {
       transactions: mTxs,
       taxonomy,
-      currency,
+      currency: displayCurrency,
       onDrill: (c, s) => {
         setDrillCat(c);
         setDrillSub(s);
@@ -2016,7 +2042,7 @@ function App() {
       avgMode,
       mMonths
     }
-  ), tab === "trend" && /* @__PURE__ */ React.createElement(TrendChart, { transactions, taxonomy, currency, pFrom, pTo }), tab === "vendors" && /* @__PURE__ */ React.createElement(VendorView, { transactions: mTxs, currency, pFrom, pTo, selMonths }), tab === "transactions" && /* @__PURE__ */ React.createElement("div", { style: card }, /* @__PURE__ */ React.createElement(
+  ), tab === "vendors" && /* @__PURE__ */ React.createElement(VendorView, { transactions: mTxs, currency: displayCurrency, pFrom, pTo, selMonths }), tab === "transactions" && /* @__PURE__ */ React.createElement("div", { style: card }, /* @__PURE__ */ React.createElement(
     "input",
     {
       value: txSearch,
