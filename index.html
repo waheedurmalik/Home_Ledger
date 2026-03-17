@@ -1615,6 +1615,7 @@ function App() {
   const [txSort, setTxSort] = useState("amount");
   const [txSearch, setTxSearch] = useState("");
   const [txCatFilter, setTxCatFilter] = useState("all");
+  const [dupesMode, setDupesMode] = useState(false);
   const [importMsg, setImportMsg] = useState(null);
   const [avgMode, setAvgMode] = useState(false);
   const [selMonths, setSelMonths] = useState([]);
@@ -1833,6 +1834,10 @@ function App() {
     });
   }
   const filteredTxs = useMemo(() => {
+    if (dupesMode && selTxs.size > 0) {
+      const keys = selTxs;
+      return [...mTxs].filter((t) => keys.has(t.date + "||" + t.description + "||" + t.amount)).sort((a, b) => (a.date + "||" + (a.description || "").toLowerCase()).localeCompare(b.date + "||" + (b.description || "").toLowerCase()));
+    }
     let base = txFilter === "standard" ? mTxs.filter((t) => t.txType === "standard") : txFilter === "nonstandard" ? mTxs.filter((t) => t.txType === "nonstandard") : txFilter === "exceptional" ? mTxs.filter((t) => t.txType === "exceptional") : txFilter === "credit" ? mTxs.filter((t) => t.isCredit) : mTxs;
     if (txCatFilter === "uncat") base = base.filter((t) => !t.category || t.category === "Miscellaneous" || t.category === "Uncategorised");
     else if (txCatFilter !== "all") base = base.filter((t) => t.category === txCatFilter);
@@ -1847,7 +1852,7 @@ function App() {
     else if (txSort === "description") sorted.sort((a, b) => (a.description || "").localeCompare(b.description || "") || b.amount - a.amount);
     else sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     return sorted;
-  }, [mTxs, txFilter, txSort, txSearch, txCatFilter, txSubFilter]);
+  }, [mTxs, txFilter, txSort, txSearch, txCatFilter, txSubFilter, dupesMode, selTxs]);
   const TABS = [["overview", "\u{1F4CA}"], ["categories", "\u{1F3F7}\uFE0F"], ["subcategories", "\u{1F516}"], ["trend", "\u{1F4C8}"], ["transactions", "\u{1F4CB}"], ["vendors", "\u{1F3EA}"]];
   const TAB_LABELS = { overview: "Overview", categories: "Categories", subcategories: "Subcategories", trend: "Trends", transactions: "Transactions", vendors: "Vendors" };
   if (!loaded) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontSize: 14 } }, "Loading\u2026");
@@ -1960,20 +1965,36 @@ function App() {
   }, style: { padding: "4px 10px", borderRadius: 20, border: `1px solid ${txCatFilter === v ? C.accent : C.border}`, background: txCatFilter === v ? C.accent : "transparent", color: txCatFilter === v ? "#fff" : v === "uncat" ? "#d4860a" : C.muted, fontSize: 11, fontWeight: txCatFilter === v ? 700 : 500, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" } }, l))), txCatFilter !== "all" && txCatFilter !== "uncat" && taxonomy[txCatFilter] && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 600, color: C.muted, flexShrink: 0 } }, "Sub:"), [["all", "All"], ...Object.keys(((_a = taxonomy[txCatFilter]) == null ? void 0 : _a.subs) || {}).map((s) => {
     var _a2, _b;
     return [s, (((_b = (_a2 = taxonomy[txCatFilter]) == null ? void 0 : _a2.subs[s]) == null ? void 0 : _b.icon) || "") + " " + s];
-  })].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setTxSubFilter(v), style: { padding: "4px 10px", borderRadius: 20, border: `1px solid ${txSubFilter === v ? C.accent : C.border}`, background: txSubFilter === v ? C.accent : "transparent", color: txSubFilter === v ? "#fff" : C.muted, fontSize: 11, fontWeight: txSubFilter === v ? 700 : 500, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" } }, l))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSelTxs(new Set(filteredTxs.map((t) => t.date + "||" + t.description + "||" + t.amount))), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 11, "5px 12px") }, "\u2611 Select All (", filteredTxs.length, ")"), selTxs.size > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => setSelTxs(/* @__PURE__ */ new Set()), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 11, "5px 12px") }, "\u2610 Deselect All"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+  })].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setTxSubFilter(v), style: { padding: "4px 10px", borderRadius: 20, border: `1px solid ${txSubFilter === v ? C.accent : C.border}`, background: txSubFilter === v ? C.accent : "transparent", color: txSubFilter === v ? "#fff" : C.muted, fontSize: 11, fontWeight: txSubFilter === v ? 700 : 500, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" } }, l))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSelTxs(new Set(filteredTxs.map((t) => t.date + "||" + t.description + "||" + t.amount))), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 11, "5px 12px") }, "\u2611 Select All (", filteredTxs.length, ")"), selTxs.size > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    setSelTxs(/* @__PURE__ */ new Set());
+    setDupesMode(false);
+  }, style: btn(C.s2, C.muted, `1px solid ${C.border}`, 11, "5px 12px") }, "\u2610 Deselect All"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
     const seen = /* @__PURE__ */ new Map();
-    const dupeKeys = /* @__PURE__ */ new Set();
+    const dupeGroups = /* @__PURE__ */ new Map();
     mTxs.forEach((t) => {
-      const k = t.date + "||" + (t.description || "").toLowerCase().trim() + "||" + (+t.amount).toFixed(2);
-      if (seen.has(k)) dupeKeys.add(t.date + "||" + t.description + "||" + t.amount);
-      else seen.set(k, t.date + "||" + t.description + "||" + t.amount);
+      const k = t.date + "||" + (t.description || "").toLowerCase().trim() + "||" + (+t.amount).toFixed(2) + "||" + (t.isCredit ? "c" : "d");
+      const rawKey = t.date + "||" + t.description + "||" + t.amount;
+      if (seen.has(k)) {
+        if (!dupeGroups.has(k)) dupeGroups.set(k, [seen.get(k)]);
+        dupeGroups.get(k).push(rawKey);
+      } else {
+        seen.set(k, rawKey);
+      }
     });
-    if (dupeKeys.size === 0) {
-      setImportMsg({ text: "No duplicates found in current view \u2713", type: "ok" });
+    if (dupeGroups.size === 0) {
+      setImportMsg({ text: "No duplicates found \u2713", type: "ok" });
       return;
     }
-    setSelTxs(dupeKeys);
-    setImportMsg({ text: `Found ${dupeKeys.size} likely duplicate transaction${dupeKeys.size !== 1 ? "s" : ""}. Review the selection then delete if confirmed.`, type: "warn" });
+    const allKeys = /* @__PURE__ */ new Set();
+    dupeGroups.forEach((keys) => keys.forEach((k) => allKeys.add(k)));
+    setSelTxs(allKeys);
+    setTxSearch("");
+    setTxFilter("all");
+    setTxCatFilter("all");
+    setTxSubFilter("all");
+    const totalDupes = [...dupeGroups.values()].reduce((s, g) => s + (g.length - 1), 0);
+    setDupesMode(true);
+    setImportMsg({ text: `Found ${totalDupes} duplicate${totalDupes !== 1 ? "s" : ""} across ${dupeGroups.size} group${dupeGroups.size !== 1 ? "s" : ""}. All shown selected \u2014 keep one per group, delete the rest.`, type: "warn" });
   }, style: btn("rgba(212,134,10,0.1)", "#c8860a", `1px solid #c8860a44`, 11, "5px 12px") }, "\u{1F50D} Find Duplicates")), selTxs.size > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 12, padding: "10px 14px", background: C.s2, borderRadius: 10, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.accent, fontWeight: 600 } }, selTxs.size, " selected"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("bulk"), style: btn(C.accent, "#fff", "none", 12, "6px 14px") }, "\u270E Edit"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
     if (!window.confirm("Delete " + selTxs.size + " transaction(s)?")) return;
     const keys = new Set(selTxs);
