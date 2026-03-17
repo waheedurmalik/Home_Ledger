@@ -1835,8 +1835,8 @@ function App() {
   }
   const filteredTxs = useMemo(() => {
     if (dupesMode && selTxs.size > 0) {
-      const keys = selTxs;
-      return [...mTxs].filter((t) => keys.has(t.date + "||" + t.description + "||" + t.amount)).sort((a, b) => (a.date + "||" + (a.description || "").toLowerCase()).localeCompare(b.date + "||" + (b.description || "").toLowerCase()));
+      const displayKeys = window.__dupeDisplayKeys || selTxs;
+      return [...mTxs].filter((t) => displayKeys.has(t.date + "||" + t.description + "||" + t.amount)).sort((a, b) => (a.date + "||" + (a.description || "").toLowerCase()).localeCompare(b.date + "||" + (b.description || "").toLowerCase()));
     }
     let base = txFilter === "standard" ? mTxs.filter((t) => t.txType === "standard") : txFilter === "nonstandard" ? mTxs.filter((t) => t.txType === "nonstandard") : txFilter === "exceptional" ? mTxs.filter((t) => t.txType === "exceptional") : txFilter === "credit" ? mTxs.filter((t) => t.isCredit) : mTxs;
     if (txCatFilter === "uncat") base = base.filter((t) => !t.category || t.category === "Miscellaneous" || t.category === "Uncategorised");
@@ -1970,31 +1970,31 @@ function App() {
     setDupesMode(false);
   }, style: btn(C.s2, C.muted, `1px solid ${C.border}`, 11, "5px 12px") }, "\u2610 Deselect All"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
     const seen = /* @__PURE__ */ new Map();
-    const dupeGroups = /* @__PURE__ */ new Map();
-    mTxs.forEach((t) => {
+    const dupeRawKeys = /* @__PURE__ */ new Set();
+    const allGroupRawKeys = /* @__PURE__ */ new Set();
+    mTxs.forEach((t, idx) => {
       const k = t.date + "||" + (t.description || "").toLowerCase().trim() + "||" + (+t.amount).toFixed(2) + "||" + (t.isCredit ? "c" : "d");
       const rawKey = t.date + "||" + t.description + "||" + t.amount;
       if (seen.has(k)) {
-        if (!dupeGroups.has(k)) dupeGroups.set(k, [seen.get(k)]);
-        dupeGroups.get(k).push(rawKey);
+        dupeRawKeys.add(rawKey);
+        allGroupRawKeys.add(seen.get(k));
+        allGroupRawKeys.add(rawKey);
       } else {
         seen.set(k, rawKey);
       }
     });
-    if (dupeGroups.size === 0) {
+    if (dupeRawKeys.size === 0) {
       setImportMsg({ text: "No duplicates found \u2713", type: "ok" });
       return;
     }
-    const allKeys = /* @__PURE__ */ new Set();
-    dupeGroups.forEach((keys) => keys.forEach((k) => allKeys.add(k)));
-    setSelTxs(allKeys);
+    setSelTxs(dupeRawKeys);
     setTxSearch("");
     setTxFilter("all");
     setTxCatFilter("all");
     setTxSubFilter("all");
-    const totalDupes = [...dupeGroups.values()].reduce((s, g) => s + (g.length - 1), 0);
     setDupesMode(true);
-    setImportMsg({ text: `Found ${totalDupes} duplicate${totalDupes !== 1 ? "s" : ""} across ${dupeGroups.size} group${dupeGroups.size !== 1 ? "s" : ""}. All shown selected \u2014 keep one per group, delete the rest.`, type: "warn" });
+    window.__dupeDisplayKeys = allGroupRawKeys;
+    setImportMsg({ text: `Found ${dupeRawKeys.size} duplicate${dupeRawKeys.size !== 1 ? "s" : ""} selected. Originals are shown but NOT selected \u2014 tap Delete to remove only the duplicates.`, type: "warn" });
   }, style: btn("rgba(212,134,10,0.1)", "#c8860a", `1px solid #c8860a44`, 11, "5px 12px") }, "\u{1F50D} Find Duplicates")), selTxs.size > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 12, padding: "10px 14px", background: C.s2, borderRadius: 10, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.accent, fontWeight: 600 } }, selTxs.size, " selected"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("bulk"), style: btn(C.accent, "#fff", "none", 12, "6px 14px") }, "\u270E Edit"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
     if (!window.confirm("Delete " + selTxs.size + " transaction(s)?")) return;
     const keys = new Set(selTxs);
