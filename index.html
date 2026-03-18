@@ -1307,10 +1307,7 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
   const [ctB, setCtB] = useState("");
   const { from: fromB, to: toB } = useMemo(() => resolvePeriod(presetB, cfB, ctB), [presetB, cfB, ctB]);
   const txA = useMemo(() => transactions, [transactions]);
-  const txB = useMemo(() => transactions.filter((t) => {
-    var _a;
-    return t.date >= fromB && t.date <= toB && globalTypeFilter.includes(t.txType) && (selMonthsB.length === 0 || selMonthsB.includes((_a = t.date) == null ? void 0 : _a.slice(0, 7)));
-  }), [transactions, fromB, toB, globalTypeFilter, selMonthsB]);
+  const txB = useMemo(() => transactions.filter((t) => t.date >= fromB && t.date <= toB && globalTypeFilter.includes(t.txType) && (selMonthsB.length === 0 || selMonthsB.includes(t.date ? t.date.slice(0, 7) : ""))), [transactions, fromB, toB, globalTypeFilter, selMonthsB]);
   const chartData = useMemo(() => {
     const sk = mode === "categories" ? "category" : "subcategory";
     const keys = [...new Set([...txA, ...txB].map((t) => t[sk]))];
@@ -1343,8 +1340,7 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
     if (!txs.length) return;
     const monthTots = {};
     txs.forEach((t) => {
-      var _a;
-      const m = (_a = t.date) == null ? void 0 : _a.slice(0, 7);
+      const m = t.date ? t.date.slice(0, 7) : "";
       if (m) monthTots[m] = (monthTots[m] || 0) + t.amount;
     });
     const monthData = Object.entries(monthTots).sort(([a], [b]) => a.localeCompare(b)).map(([m, v]) => ({ key: m, A: v, B: 0 }));
@@ -1364,10 +1360,7 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
     setPresetB(v);
     setSelMonthsB([]);
   }, style: { padding: "5px 11px", borderRadius: 20, border: `1px solid ${presetB === v ? "#5a6fd6" : C.border}`, background: presetB === v ? "#5a6fd6" : "transparent", color: presetB === v ? "#fff" : C.muted, fontSize: 12, cursor: "pointer", fontWeight: presetB === v ? 700 : 500, fontFamily: "inherit" } }, l))), presetB === "custom" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.dim } }, "From"), /* @__PURE__ */ React.createElement("input", { type: "date", value: cfB, onChange: (e) => setCfB(e.target.value), style: { ...inp(), colorScheme: "light", fontSize: 11, cursor: "pointer", width: "auto" } }), /* @__PURE__ */ React.createElement("span", { style: { color: C.dim } }, "\u2192"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: C.dim } }, "To"), /* @__PURE__ */ React.createElement("input", { type: "date", value: ctB, onChange: (e) => setCtB(e.target.value), style: { ...inp(), colorScheme: "light", fontSize: 11, cursor: "pointer", width: "auto" } })), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#5a6fd6", fontFamily: "monospace", marginBottom: 6 } }, fromB, " \u2192 ", toB), (() => {
-    const bMonths = [...new Set(transactions.filter((t) => t.date >= fromB && t.date <= toB).map((t) => {
-      var _a;
-      return (_a = t.date) == null ? void 0 : _a.slice(0, 7);
-    }).filter(Boolean))].sort();
+    const bMonths = [...new Set(transactions.filter((t) => t.date >= fromB && t.date <= toB).map((t) => t.date ? t.date.slice(0, 7) : "").filter(Boolean))].sort();
     if (bMonths.length < 2) return null;
     const bLabel = selMonthsB.length === 0 ? "\u{1F4C5} Months \u25BE" : selMonthsB.length === 1 ? "\u{1F4C5} " + fmtM(selMonthsB[0]) + " \u25BE" : "\u{1F4C5} " + selMonthsB.length + " Months \u25BE";
     return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", display: "inline-block", marginTop: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setShowMonthPickerB((v) => !v), style: { padding: "4px 11px", borderRadius: 20, border: `1px solid ${selMonthsB.length > 0 ? "#5a6fd6" : C.border}`, background: selMonthsB.length > 0 ? "#5a6fd6" : "transparent", color: selMonthsB.length > 0 ? "#fff" : C.muted, fontSize: 11, cursor: "pointer", fontFamily: "inherit" } }, bLabel), showMonthPickerB && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { onClick: () => setShowMonthPickerB(false), style: { position: "fixed", inset: 0, zIndex: 199 } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: "110%", left: 0, zIndex: 200, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", minWidth: 160, maxHeight: 220, overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => {
@@ -1394,10 +1387,7 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
         if (!r) return;
         const mKey = (_a = monthDrill.data.find((d) => fmtM(d.key) === r.key)) == null ? void 0 : _a.key;
         if (!mKey) return;
-        const txs = monthDrill.txs.filter((t) => {
-          var _a2;
-          return ((_a2 = t.date) == null ? void 0 : _a2.slice(0, 7)) === mKey;
-        });
+        const txs = monthDrill.txs.filter((t) => (t.date ? t.date.slice(0, 7) : "") === mKey);
         if (txs.length) {
           setMonthDrill((prev) => ({ ...prev, txDrill: { txs, label: monthDrill.label + " \xB7 " + fmtM(mKey) } }));
         }
@@ -1442,10 +1432,7 @@ function TrendChart({ transactions, taxonomy, currency, pFrom, pTo }) {
     for (const [, d] of Object.entries(taxonomy)) if (d.subs[n]) return readableColour(d.color);
     return readableColour(PAL[allSeries.indexOf(n) % PAL.length]);
   };
-  const getBucket = (t, g) => {
-    var _a;
-    return g === "day" ? t.date : g === "week" ? weekKey(t.date) : ((_a = t.date) == null ? void 0 : _a.substring(0, 7)) || "";
-  };
+  const getBucket = (t, g) => g === "day" ? t.date : g === "week" ? weekKey(t.date) : (t.date ? t.date.substring(0, 7) : "") || "";
   const getLabel = (k, g) => g === "month" ? fmtM(k) : g === "day" ? fmtD(k) : k;
   const trendData = useMemo(() => {
     const b = {};
@@ -1650,10 +1637,9 @@ function VendorView({ transactions, currency, pFrom, pTo, selMonths }) {
     const yr = today.getFullYear() + "-";
     const stats = {};
     transactions.forEach((t) => {
-      var _a;
       if (!selected.has(t.description)) return;
       if (!stats[t.description]) stats[t.description] = { period: 0, thisMonth: 0, lastMonth: 0, ytd: 0 };
-      const m = (_a = t.date) == null ? void 0 : _a.slice(0, 7);
+      const m = t.date ? t.date.slice(0, 7) : "";
       stats[t.description].period += t.amount;
       if (m === thisM) stats[t.description].thisMonth += t.amount;
       if (m === lastM) stats[t.description].lastMonth += t.amount;
@@ -1764,28 +1750,15 @@ function App() {
   const { from: pFrom, to: pTo } = useMemo(() => resolvePeriod(period.preset, period.from, period.to), [period]);
   const mMonths = useMemo(() => {
     if (selMonths.length > 0) return selMonths.length;
-    const ms = new Set(transactions.filter((t) => t.date >= pFrom && t.date <= pTo).map((t) => {
-      var _a2;
-      return (_a2 = t.date) == null ? void 0 : _a2.slice(0, 7);
-    }).filter(Boolean));
+    const ms = new Set(transactions.filter((t) => t.date >= pFrom && t.date <= pTo).map((t) => t.date ? t.date.slice(0, 7) : "").filter(Boolean));
     return Math.max(1, ms.size);
   }, [transactions, pFrom, pTo, selMonths]);
   const mTxs = useMemo(() => {
-    if (selMonths.length > 0) return transactions.filter((t) => {
-      var _a2;
-      return selMonths.includes((_a2 = t.date) == null ? void 0 : _a2.slice(0, 7)) && globalTypeFilter.includes(t.txType);
-    });
+    if (selMonths.length > 0) return transactions.filter((t) => selMonths.includes(t.date ? t.date.slice(0, 7) : "") && globalTypeFilter.includes(t.txType));
     return transactions.filter((t) => t.date >= pFrom && t.date <= pTo && globalTypeFilter.includes(t.txType));
   }, [transactions, pFrom, pTo, globalTypeFilter, selMonths]);
   const total = mTxs.reduce((s, t) => s + t.amount, 0);
-  const windowDays = Math.max(1, Math.round((new Date(pTo) - new Date(pFrom)) / (1e3 * 60 * 60 * 24)));
-  const prevTo = new Date(pFrom);
-  prevTo.setDate(prevTo.getDate() - 1);
-  const prevFrom = new Date(prevTo);
-  prevFrom.setDate(prevFrom.getDate() - (windowDays - 1));
-  const toISO = (d) => d.toISOString().slice(0, 10);
-  const prevTotal = transactions.filter((t) => t.date >= toISO(prevFrom) && t.date <= toISO(prevTo)).reduce((s, t) => s + t.amount, 0);
-  const change = prevTotal ? ((total - prevTotal) / prevTotal * 100).toFixed(1) : null;
+  const change = null;
   const typeTots = useMemo(() => {
     const r = { standard: 0, nonstandard: 0, exceptional: 0 };
     mTxs.forEach((t) => {
@@ -1970,10 +1943,7 @@ function App() {
     setPeriod((p) => ({ ...p, preset: v }));
     setSelMonths([]);
   }, style: { padding: "6px 13px", borderRadius: 20, border: `1px solid ${period.preset === v && selMonths.length === 0 ? C.accent : C.border}`, background: period.preset === v && selMonths.length === 0 ? C.accent : "transparent", color: period.preset === v && selMonths.length === 0 ? "#fff" : C.muted, fontSize: 12, cursor: "pointer", fontWeight: period.preset === v && selMonths.length === 0 ? 700 : 500, outline: "none" } }, l)), (() => {
-    const allTxMonths = [...new Set(transactions.map((t) => {
-      var _a2;
-      return (_a2 = t.date) == null ? void 0 : _a2.slice(0, 7);
-    }).filter(Boolean))].sort();
+    const allTxMonths = [...new Set(transactions.map((t) => t.date ? t.date.slice(0, 7) : "").filter(Boolean))].sort();
     if (allTxMonths.length < 2) return null;
     const label = selMonths.length === 0 ? "\u{1F4C5} Months \u25BE" : selMonths.length === 1 ? "\u{1F4C5} " + fmtM(selMonths[0]) + " \u25BE" : "\u{1F4C5} " + selMonths.length + " Months \u25BE";
     return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", display: "inline-block" } }, /* @__PURE__ */ React.createElement(
