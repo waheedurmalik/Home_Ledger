@@ -1353,7 +1353,7 @@ function LineChartCanvas({ data, series, colorOf, currency, xKey, dashedKeys = [
     }
   ), tooltip && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: tooltip.x + 12, top: tooltip.y - 10, background: "#1a2a1a", border: "1px solid #2a3a2a", borderRadius: 10, padding: "10px 14px", fontSize: 12, zIndex: 999, pointerEvents: "none", minWidth: 150 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, color: C.muted, marginBottom: 6 } }, tooltip.label), tooltip.vals.map(({ s, v }) => /* @__PURE__ */ React.createElement("div", { key: s, style: { display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { color: colorOf(s) } }, s.length > 18 ? s.slice(0, 17) + "\u2026" : s), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "monospace", color: C.text } }, fmt(v, currency))))));
 }
-function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pTo, globalTypeFilter, displayRates, avgMode, mMonths }) {
+function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pTo, globalTypeFilter, displayRates, displayCurrency, avgMode, mMonths }) {
   const [mode, setMode] = useState("categories");
   const [showB, setShowB] = useState(false);
   const [monthDrill, setMonthDrill] = useState(null);
@@ -1376,11 +1376,10 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
       totsB[t[sk]] = (totsB[t[sk]] || 0) + t.amount;
     });
     const div = avgMode ? mMonths || 1 : 1;
-    return keys.map((k) => {
-      var rate = _globalDispRates ? Object.values(_globalDispRates)[0] || 1 : 1;
-      return { key: k, A: (totsA[k] || 0) / div * rate, B: (totsB[k] || 0) * rate };
-    }).sort((a, b) => b.A + b.B - (a.A + a.B));
-  }, [txA, txB, mode, avgMode, mMonths]);
+    var dc = displayCurrency || currency;
+    var rate = displayRates && dc && displayRates[dc] ? displayRates[dc] : 1;
+    return keys.map((k) => ({ key: k, A: (totsA[k] || 0) / div * rate, B: (totsB[k] || 0) * rate })).sort((a, b) => b.A + b.B - (a.A + a.B));
+  }, [txA, txB, mode, avgMode, mMonths, displayRates, currency, displayCurrency]);
   const colorOf = (k) => {
     var _a;
     if (mode === "categories") return readableColour(((_a = taxonomy[k]) == null ? void 0 : _a.color) || PAL[chartData.findIndex((r) => r.key === k) % PAL.length]);
@@ -2046,7 +2045,8 @@ function App() {
       pFrom,
       pTo,
       globalTypeFilter,
-      displayRates: dispRates2,
+      displayRates,
+      displayCurrency,
       avgMode,
       mMonths,
       onDrillTxs: (txs, label) => setDrillOverlay({ txs, label })
