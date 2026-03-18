@@ -1376,7 +1376,10 @@ function SpendingChart({ transactions, taxonomy, currency, onDrillTxs, pFrom, pT
       totsB[t[sk]] = (totsB[t[sk]] || 0) + t.amount;
     });
     const div = avgMode ? mMonths || 1 : 1;
-    return keys.map((k) => ({ key: k, A: (totsA[k] || 0) / div, B: totsB[k] || 0 })).sort((a, b) => b.A + b.B - (a.A + a.B));
+    return keys.map((k) => {
+      var rate = _globalDispRates ? Object.values(_globalDispRates)[0] || 1 : 1;
+      return { key: k, A: (totsA[k] || 0) / div * rate, B: (totsB[k] || 0) * rate };
+    }).sort((a, b) => b.A + b.B - (a.A + a.B));
   }, [txA, txB, mode, avgMode, mMonths]);
   const colorOf = (k) => {
     var _a;
