@@ -1,4 +1,4 @@
-const CACHE = “hf-v5”;
+const CACHE = “hf-v6”;
 const ASSETS = [”./”, “./index.html”, “./manifest.json”, “./logo.png”];
 
 self.addEventListener(“install”, function(e) {
