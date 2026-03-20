@@ -22,12 +22,25 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <!-- Eruda mobile console — remove after debugging -->
+
+  <script src="https://cdn.jsdelivr.net/npm/eruda@3.0.1/eruda.min.js"></script>
+
+  <script>eruda.init();</script>
+
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
+
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <script>
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBeB2_yxuxDe6k1TQSXB6EJEUQ6eGJWNTo",
@@ -2712,10 +2725,12 @@ export default function App() {
 ReactDOM.render(React.createElement(ErrorBoundary, null, React.createElement(App, null)), document.getElementById("root"));
 
   </script>
+
   <script>
     if('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function(){});
     }
   </script>
+
 </body>
 </html>
