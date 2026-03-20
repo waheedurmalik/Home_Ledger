@@ -22,27 +22,12 @@
 </head>
 <body>
   <div id="root"></div>
-
-  <!-- Firebase compat SDK -->
-
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-  <!-- React 17 -->
-
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
-
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
-
-  <!-- SheetJS for Excel export -->
-
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- App -->
-
   <script>
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBeB2_yxuxDe6k1TQSXB6EJEUQ6eGJWNTo",
@@ -366,6 +351,45 @@ function ExportModal({ transactions, taxonomy, currency, onClose }) {
     onClose();
   }, style: { ...btn(C.accent, "#fff", "none", 14, "13px 0"), flex: 1 } }, "\u2B07 Download Excel"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: btn(C.s2, C.muted, `1px solid ${C.border}`, 13, "13px 18px") }, "Cancel"))));
 }
+function FinItemCard({ type, item, onEdit, onDel }) {
+  var title = "", subtitle = "", badge = "", badgeColor = C.muted;
+  if (type === "accounts") {
+    title = item.name;
+    subtitle = (item.bank || "") + (item.last4 ? " \xB7\xB7\xB7" + item.last4 : "");
+    badge = item.type === "credit" ? "\u{1F4B3} Credit" : item.type === "savings" ? "\u{1F4B0} Savings" : "\u{1F3E6} Current";
+  } else if (type === "cash") {
+    title = item.label;
+    subtitle = (item.currency || "AED") + " " + (item.amount || 0).toLocaleString();
+  } else if (type === "investments") {
+    title = item.name;
+    subtitle = (item.ticker ? "$" + item.ticker + " \xB7 " : "") + ((item.shares || 0) + " shares");
+    badge = item.status === "locked" ? "\u{1F512} Locked" + (item.unlockDate ? " \xB7 " + fmtDNum(item.unlockDate) : "") : "\u2705 Available";
+    badgeColor = item.status === "locked" ? C.danger : C.accent;
+  } else if (type === "properties") {
+    title = item.name;
+    subtitle = (item.currency || "AED") + " " + (item.currentValue || 0).toLocaleString();
+  } else if (type === "loans") {
+    title = item.name;
+    subtitle = (item.lender || "") + " \xB7 " + (item.currency || "AED") + " " + (item.outstandingBalance || 0).toLocaleString();
+    badge = (item.term === "long" ? "Long-term" : "Short-term") + " \xB7 " + (item.loanType || "other");
+    badgeColor = item.term === "long" ? C.danger : "#d4860a";
+  } else if (type === "debts") {
+    title = item.person;
+    subtitle = (item.currency || "AED") + " " + (item.amount || 0).toLocaleString();
+    badge = item.debtType === "owed_to_me" ? "\u2191 They owe me" : "\u2193 I owe them";
+    badgeColor = item.debtType === "owed_to_me" ? C.accent : C.danger;
+  } else if (type === "forecastEvents") {
+    title = item.label;
+    subtitle = (item.date || "no date") + " \xB7 " + (item.currency || "AED") + " " + (item.amount || 0).toLocaleString();
+    badge = item.confidence === "certain" ? "\u2705" : item.confidence === "likely" ? "\u{1F7E1}" : "\u26AA";
+    badgeColor = item.eventType === "income" ? C.accent : C.danger;
+  }
+  return /* @__PURE__ */ React.createElement("div", { style: { background: C.surface, border: "1px solid " + C.border, borderRadius: 12, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, title), subtitle && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 2 } }, subtitle), badge && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: badgeColor, marginTop: 4, fontWeight: 600 } }, badge)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexShrink: 0 } }, /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    onEdit(item);
+  }, style: btn(C.s2, C.muted, "1px solid " + C.border, 11, "4px 10px") }, "\u270E Edit"), /* @__PURE__ */ React.createElement("button", { onClick: function() {
+    onDel(item.id);
+  }, style: btn("rgba(245,118,118,0.1)", C.danger, "1px solid " + C.danger + "44", 11, "4px 8px") }, "\u2715")));
+}
 function FinancialSection({ financials, setFinancials, taxonomy }) {
   var _a;
   const [subSection, setSubSection] = useState("accounts");
@@ -389,23 +413,25 @@ function FinancialSection({ financials, setFinancials, taxonomy }) {
     setErr("");
   }
   function saveForm() {
-    const { type } = editing;
+    var type = editing.type;
     if (!form.name && !form.label && !form.person) {
       setErr("Name is required.");
       return;
     }
     if (editing.item) {
-      update(type, (arr) => arr.map((x) => x.id === editing.item.id ? { ...form, id: x.id } : x));
+      update(type, function(arr) {
+        return arr.map(function(x) {
+          return x.id === editing.item.id ? Object.assign({}, form, { id: x.id }) : x;
+        });
+      });
     } else {
-      update(type, (arr) => [...arr, { ...form, id: uid() }]);
+      update(type, function(arr) {
+        return arr.concat([Object.assign({}, form, { id: uid() })]);
+      });
     }
     setEditing(null);
     setForm({});
     setErr("");
-  }
-  function del(type, id) {
-    if (!window.confirm("Delete this item?")) return;
-    update(type, (arr) => arr.filter((x) => x.id !== id));
   }
   const SUB_SECTIONS = [
     ["accounts", "\u{1F3E6}", "Accounts"],
@@ -430,41 +456,6 @@ function FinancialSection({ financials, setFinancials, taxonomy }) {
     if (editing.type === "forecastEvents") return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(LabelRow, { label: "Event Label" }, /* @__PURE__ */ React.createElement("input", { value: f.label || "", onChange: (e) => set("label", e.target.value), placeholder: "e.g. Annual Bonus, RSU Vest, Holiday", style: inp2() })), /* @__PURE__ */ React.createElement(LabelRow, { label: "Type" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["income", "+ Income"], ["expense", "- Expense"]].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => set("eventType", v), style: { flex: 1, padding: "8px 0", borderRadius: 10, border: `1px solid ${f.eventType === v ? v === "income" ? C.accent : C.danger : C.border}`, background: f.eventType === v ? v === "income" ? "rgba(42,157,111,0.08)" : "rgba(217,64,64,0.08)" : "transparent", color: f.eventType === v ? v === "income" ? C.accent : C.danger : C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit", fontWeight: f.eventType === v ? 700 : 400 } }, l)))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } }, /* @__PURE__ */ React.createElement(LabelRow, { label: "Amount" }, /* @__PURE__ */ React.createElement("input", { type: "number", value: f.amount || "", onChange: (e) => set("amount", parseFloat(e.target.value) || 0), placeholder: "0", style: inp2({ fontFamily: "monospace" }) })), /* @__PURE__ */ React.createElement(LabelRow, { label: "Currency" }, /* @__PURE__ */ React.createElement("select", { value: f.currency || "AED", onChange: (e) => set("currency", e.target.value), style: { ...inp2(), appearance: "none" } }, CURRENCIES.map((c) => /* @__PURE__ */ React.createElement("option", { key: c }, c))))), /* @__PURE__ */ React.createElement(LabelRow, { label: "Expected Date" }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f.date || "", onChange: (e) => set("date", e.target.value), style: { ...inp2(), colorScheme: "light" } })), /* @__PURE__ */ React.createElement(LabelRow, { label: "Confidence" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["certain", "\u2705 Certain"], ["likely", "\u{1F7E1} Likely"], ["possible", "\u26AA Possible"]].map(([v, l]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => set("confidence", v), style: { flex: 1, padding: "7px 0", borderRadius: 10, border: `1px solid ${f.confidence === v ? C.accent : C.border}`, background: f.confidence === v ? "rgba(42,157,111,0.08)" : "transparent", color: f.confidence === v ? C.accent : C.muted, fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: f.confidence === v ? 700 : 400 } }, l)))));
     return null;
   }
-  function ItemCard({ type, item }) {
-    let title = "", subtitle = "", badge = "", badgeColor = C.muted;
-    if (type === "accounts") {
-      title = item.name;
-      subtitle = (item.bank || "") + (item.last4 ? " \xB7\xB7\xB7" + item.last4 : "");
-      badge = item.type === "credit" ? "\u{1F4B3} Credit" : item.type === "savings" ? "\u{1F4B0} Savings" : "\u{1F3E6} Current";
-    } else if (type === "cash") {
-      title = item.label;
-      subtitle = (item.currency || "AED") + " " + (item.amount || 0).toLocaleString();
-    } else if (type === "investments") {
-      title = item.name;
-      subtitle = (item.ticker ? "$" + item.ticker + " \xB7 " : "") + ((item.shares || 0) + " shares");
-      badge = item.status === "locked" ? "\u{1F512} Locked" + (item.unlockDate ? " \xB7 " + fmtDNum(item.unlockDate) : "") : "\u2705 Available";
-      badgeColor = item.status === "locked" ? C.danger : C.accent;
-    } else if (type === "properties") {
-      title = item.name;
-      subtitle = (item.currency || "AED") + " " + (item.currentValue || 0).toLocaleString();
-    } else if (type === "loans") {
-      title = item.name;
-      subtitle = (item.lender || "") + " \xB7 " + (item.currency || "AED") + " " + (item.outstandingBalance || 0).toLocaleString();
-      badge = (item.term === "long" ? "Long-term" : "Short-term") + " \xB7 " + (item.loanType || "other");
-      badgeColor = item.term === "long" ? C.danger : "#d4860a";
-    } else if (type === "debts") {
-      title = item.person;
-      subtitle = (item.currency || "AED") + " " + (item.amount || 0).toLocaleString();
-      badge = item.debtType === "owed_to_me" ? "\u2191 They owe me" : "\u2193 I owe them";
-      badgeColor = item.debtType === "owed_to_me" ? C.accent : C.danger;
-    } else if (type === "forecastEvents") {
-      title = item.label;
-      subtitle = (item.date || "no date") + " \xB7 " + (item.currency || "AED") + " " + (item.amount || 0).toLocaleString();
-      badge = item.confidence === "certain" ? "\u2705" : item.confidence === "likely" ? "\u{1F7E1}" : "\u26AA";
-      badgeColor = item.eventType === "income" ? C.accent : C.danger;
-    }
-    return /* @__PURE__ */ React.createElement("div", { style: { background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, title), subtitle && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 2 } }, subtitle), badge && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: badgeColor, marginTop: 4, fontWeight: 600 } }, badge)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexShrink: 0 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => openEdit(type, item), style: btn(C.s2, C.muted, `1px solid ${C.border}`, 11, "4px 10px") }, "\u270E Edit"), /* @__PURE__ */ React.createElement("button", { onClick: () => del(type, item.id), style: btn("rgba(245,118,118,0.1)", C.danger, `1px solid ${C.danger}44`, 11, "4px 8px") }, "\u2715")));
-  }
   const activeItems = financials[subSection] || [];
   const [icon, , label] = SUB_SECTIONS.find((s) => s[0] === subSection) || ["", "", ""];
   const ADD_DEFAULTS = {
@@ -480,7 +471,18 @@ function FinancialSection({ financials, setFinancials, taxonomy }) {
     setEditing(null);
     setForm({});
     setErr("");
-  }, style: btn(C.s2, C.muted, `1px solid ${C.border}`, 13, "12px 16px") }, "Cancel")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 16 } }, SUB_SECTIONS.map(([k, ico, lbl]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSubSection(k), style: { padding: "6px 12px", borderRadius: 20, border: `1px solid ${subSection === k ? C.accent : C.border}`, background: subSection === k ? "rgba(42,157,111,0.1)" : "transparent", color: subSection === k ? C.accent : C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit", fontWeight: subSection === k ? 700 : 500 } }, ico, " ", lbl, " ", (financials[k] || []).length > 0 && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 3, background: C.accent, color: "#fff", borderRadius: 20, padding: "0 5px", fontSize: 10, fontWeight: 700 } }, (financials[k] || []).length)))), activeItems.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "28px 16px", color: C.muted, background: C.s2, borderRadius: 12, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, marginBottom: 8 } }, icon), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 600, marginBottom: 4 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.dim } }, "No items yet \u2014 tap below to add one")), activeItems.map((item) => /* @__PURE__ */ React.createElement(ItemCard, { key: item.id, type: subSection, item })), /* @__PURE__ */ React.createElement("button", { onClick: () => openNew(subSection, ADD_DEFAULTS[subSection] || {}), style: { ...btn(C.accent, "#fff", "none", 13, "12px 0"), width: "100%", marginTop: 4 } }, "+ Add ", label));
+  }, style: btn(C.s2, C.muted, `1px solid ${C.border}`, 13, "12px 16px") }, "Cancel")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 16 } }, SUB_SECTIONS.map(([k, ico, lbl]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSubSection(k), style: { padding: "6px 12px", borderRadius: 20, border: `1px solid ${subSection === k ? C.accent : C.border}`, background: subSection === k ? "rgba(42,157,111,0.1)" : "transparent", color: subSection === k ? C.accent : C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit", fontWeight: subSection === k ? 700 : 500 } }, ico, " ", lbl, " ", (financials[k] || []).length > 0 && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 3, background: C.accent, color: "#fff", borderRadius: 20, padding: "0 5px", fontSize: 10, fontWeight: 700 } }, (financials[k] || []).length)))), activeItems.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "28px 16px", color: C.muted, background: C.s2, borderRadius: 12, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, marginBottom: 8 } }, icon), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 600, marginBottom: 4 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: C.dim } }, "No items yet \u2014 tap below to add one")), activeItems.map(function(item) {
+    return React.createElement(FinItemCard, { key: item.id, type: subSection, item, onEdit: function(it) {
+      openEdit(subSection, it);
+    }, onDel: function(id) {
+      if (!window.confirm("Delete this item?")) return;
+      update(subSection, function(arr) {
+        return arr.filter(function(x) {
+          return x.id !== id;
+        });
+      });
+    } });
+  }), /* @__PURE__ */ React.createElement("button", { onClick: () => openNew(subSection, ADD_DEFAULTS[subSection] || {}), style: { ...btn(C.accent, "#fff", "none", 13, "12px 0"), width: "100%", marginTop: 4 } }, "+ Add ", label));
 }
 function ManageModal({ taxonomy, setTaxonomy, vendorMap, setVendorMap, rawTxs, setRawTxs, financials, setFinancials, onClose }) {
   var _a, _b;
@@ -2710,14 +2712,10 @@ export default function App() {
 ReactDOM.render(React.createElement(ErrorBoundary, null, React.createElement(App, null)), document.getElementById("root"));
 
   </script>
-
-  <!-- Service Worker -->
-
   <script>
     if('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function(){});
     }
   </script>
-
 </body>
 </html>
