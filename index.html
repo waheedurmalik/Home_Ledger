@@ -2031,12 +2031,12 @@ function SummaryTab({ transactions, taxonomy, displayCurrency, globalTypeFilter 
     var buckets = { standard: 0, nonstandard: 0, exceptional: 0 };
     txs.forEach(function(t) {
       if (t.isCredit) {
-        if (!globalTypeFilter.includes(t.txType || "standard")) return;
+        var effectiveType = t.txType === "credit" || !t.txType ? "standard" : t.txType;
+        if (!globalTypeFilter.includes(effectiveType)) return;
         if (t.category === "Income") {
           income += t.amount;
         } else {
-          var k = t.txType || "standard";
-          buckets[k] = (buckets[k] || 0) - t.amount;
+          buckets[effectiveType] = (buckets[effectiveType] || 0) - t.amount;
         }
       } else {
         if (globalTypeFilter.includes(t.txType)) {
@@ -3765,7 +3765,7 @@ function App() {
     return Math.max(1, ms.size);
   }, [transactions, pFrom, pTo, selMonths]);
   const mTxs = useMemo(() => {
-    const passType = (t) => globalTypeFilter.includes(t.txType || "standard");
+    const passType = (t) => t.isCredit || globalTypeFilter.includes(t.txType || "standard");
     const inPeriod = transactions.filter((t) => t.date >= pFrom && t.date <= pTo && passType(t));
     const byMonth = selMonths.length > 0 ? inPeriod.filter((t) => selMonths.includes(t.date ? t.date.slice(0, 7) : "")) : inPeriod;
     if (txViewMode === "costs") return byMonth.filter((t) => !t.isCredit);
@@ -3780,11 +3780,12 @@ function App() {
         if (t.category === "Income") {
           r.income += t.amount;
         } else {
-          const k = t.txType || "standard";
+          const k = t.txType === "credit" || !t.txType ? "standard" : t.txType;
           r[k] = (r[k] || 0) - t.amount;
         }
       } else {
-        r[t.txType] = (r[t.txType] || 0) + t.amount;
+        const k = t.txType === "credit" || !t.txType ? "standard" : t.txType;
+        r[k] = (r[k] || 0) + t.amount;
       }
     });
     r.standard = Math.max(0, r.standard);
@@ -3852,7 +3853,7 @@ function App() {
       const credit = tx.isCredit === true || amt < 0 && !tx.isCredit;
       const originalAmount = Math.abs(amt);
       const aedAmount = importCurrency !== "AED" && rates ? toAED(originalAmount, importCurrency, rates) : originalAmount;
-      return { ...tx, amount: parseFloat(aedAmount.toFixed(2)), originalAmount, currency: importCurrency, isCredit: credit, txType: credit ? "credit" : tx.txType || getTxType(tx) };
+      return { ...tx, amount: parseFloat(aedAmount.toFixed(2)), originalAmount, currency: importCurrency, isCredit: credit, txType: credit ? tx.txType === "credit" ? "standard" : tx.txType || "standard" : tx.txType || getTxType(tx) };
     }).filter((t) => t.amount > 0);
     let msg = null;
     const txKey = (t) => `${t.date}||${(t.description || "").toLowerCase().trim()}||${(+t.amount).toFixed(2)}`;
